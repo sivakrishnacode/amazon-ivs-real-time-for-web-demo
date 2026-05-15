@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 8px);
+  }
+  .bottom-safe {
+    bottom: max(env(safe-area-inset-bottom), 8px);
+  }
+  .-bottom-safe {
+    bottom: calc(-1 * env(safe-area-inset-bottom));
+  }
+  .-mt-safe {
+    margin-top: calc(-1 * env(safe-area-inset-bottom));
+  }
+}
+
+html,
+body {
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+div {
+  user-select: none;
+}

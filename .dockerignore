@@ -1,0 +1,9 @@
+node_modules
+dist
+.git
+.github
+README.md
+DEPLOYMENT.md
+app-screenshot.png
+*.log
+.DS_Store
