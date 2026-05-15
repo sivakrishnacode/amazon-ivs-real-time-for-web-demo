@@ -1,3 +1,3 @@
 export const DEMO_API_URL =
   import.meta.env.VITE_API_URL ||
-  'https://n98pi3gouk.execute-api.us-west-2.amazonaws.com/prod/token';
+  'https://k0ljndvw90.execute-api.us-east-1.amazonaws.com/prod/M738diLr2xJapjWfioKn';
