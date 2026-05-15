@@ -25,6 +25,7 @@ import BackButton from '../components/BackButton.vue';
 import GuestSpotDemo from '../demos/GuestSpotDemo.vue';
 import PKModeDemo from '../demos/PKModeDemo.vue';
 import AudioOnlyDemo from '../demos/AudioOnlyDemo.vue';
+import MeetingDemo from '../demos/MeetingDemo.vue';
 import { usePwaStore } from '../stores/pwa';
 import { useChatStore } from '../stores/chat';
 import PrivacyPopover from '../components/PrivacyPopover.vue';
@@ -51,6 +52,10 @@ const demos = {
   'audio-only': {
     title: 'Audio room',
     component: AudioOnlyDemo
+  },
+  'meeting': {
+    title: 'Meeting',
+    component: MeetingDemo
   },
 };
 

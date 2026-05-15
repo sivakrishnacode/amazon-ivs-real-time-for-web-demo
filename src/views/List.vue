@@ -47,6 +47,7 @@ const stageLoading = ref(undefined);
 
 const demos = [
   { name: 'Join Audio-only stream', path: '/demos/audio-only', id: 'audio' },
+  { name: 'Join Meeting (Grid view)', path: '/demos/meeting', id: 'meeting' },
   { name: 'Join VS/PK stream', path: '/demos/pk-mode', id: 'pk' },
   { name: 'Join Guest spot stream', path: '/demos/guest-spot', id: 'guest' },
 ];
