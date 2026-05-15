@@ -22,7 +22,7 @@
              <div class="size-24 rounded-full bg-surfaceAlt3 flex items-center justify-center">
                 <PhVideoConference :size="48" weight="duotone" class="text-secondary" />
              </div>
-             <p class="text-lg font-medium">Waiting for participants to join...</p>
+             <p class="text-lg font-medium">Waiting for participants to join....</p>
           </div>
         </div>
       </div>
