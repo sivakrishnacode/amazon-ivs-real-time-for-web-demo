@@ -8,6 +8,7 @@
           :guest-audio-stream="computedGuestAudio" />
         <PkMode v-else-if="stageMode === 'PK'" v-model:red-votes="redVotes" v-model:timer="timer" v-model:timer-interval="timerInterval" :video-stream="computedMainVideo"
           :audio-stream="computedMainAudio" :guest-video-stream="computedGuestVideo" :guest-audio-stream="computedGuestAudio" :last-vote="lastVote" />
+        <GridStage v-else-if="stageMode === 'GRID'" />
 
         <!-- Chat overlay -->
         <div class="absolute bottom-0 left-2 right-2 h-[50%] gradient-mask-t-80 flex items-end justify-normal">
@@ -131,6 +132,7 @@ import SelectModePopover from '../components/SelectModePopover.vue';
 import SingleVideo from './SingleVideo.vue';
 import GuestSpot from './GuestSpot.vue';
 import PkMode from './PkMode.vue';
+import GridStage from './GridStage.vue';
 import MobileButton from '../components/MobileButton.vue';
 import ShowChatButton from '../components/ShowChatButton.vue';
 import ChatInput from '../components/ChatInput.vue';

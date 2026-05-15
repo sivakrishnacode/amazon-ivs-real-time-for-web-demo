@@ -70,11 +70,17 @@ import {
 } from '@headlessui/vue'
 import MobileButton from './MobileButton.vue';
 import { ref } from 'vue';
-import { PhBoxingGlove, PhCheckCircle, PhUserSquare } from '@phosphor-icons/vue';
+import { PhBoxingGlove, PhCheckCircle, PhSquaresFour, PhUserSquare } from '@phosphor-icons/vue';
 
 const emit = defineEmits(['join'])
-const selectedStageModeRef = ref('GUEST_SPOT');
+const selectedStageModeRef = ref('GRID');
 const streamTypes = [
+  {
+    name: 'Grid view',
+    description: 'Join in a grid layout',
+    icon: PhSquaresFour,
+    value: 'GRID',
+  },
   {
     name: 'Guest spot',
     description: 'Join as a guest',
