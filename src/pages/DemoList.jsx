@@ -48,14 +48,29 @@ export default function DemoList() {
   useEffect(() => {
     init();
     leaveStage();
+
+    // Check for a shared meeting link
+    const params = new URLSearchParams(window.location.search);
+    const sharedHostId = params.get('hostId');
+    if (sharedHostId) {
+      const demo = DEMOS.find((d) => d.id === 'meeting');
+      if (demo) {
+        // Wait slightly for store username initialization to finish
+        setTimeout(() => {
+          const currentUsername = useUsernameStore.getState().username || 'Guest';
+          handleSelect(demo, sharedHostId, currentUsername);
+        }, 100);
+      }
+    }
   }, []);
 
-  const handleSelect = async (demo) => {
+  const handleSelect = async (demo, sharedHostId = null, currentUsername = null) => {
     setLoading(demo.id);
+    const activeUsername = currentUsername || username;
     try {
       let token = '';
       try {
-        token = await fetchDemoToken(username, demo.id);
+        token = await fetchDemoToken(activeUsername, demo.id, sharedHostId);
       } catch (err) {
         console.warn('Backend fetch failed, using local storage/prompt fallback:', err);
       }
@@ -81,7 +96,10 @@ export default function DemoList() {
       }
 
       await connectToStage(token);
-      navigate(demo.path);
+      
+      // Preserve hostId in route if joining as guest
+      const path = sharedHostId ? `${demo.path}?hostId=${sharedHostId}` : demo.path;
+      navigate(path);
     } catch (err) {
       console.error('Failed to load demo:', err);
       localStorage.removeItem(`ivs-saved-token-${demo.id}`);
