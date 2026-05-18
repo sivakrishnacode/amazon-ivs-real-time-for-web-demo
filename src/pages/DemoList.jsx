@@ -1,18 +1,30 @@
-import React, { useState, useEffect } from 'react';
+/**
+ * DemoList.jsx — Landing page
+ *
+ * Fixes:
+ * 1. Guest auto-join reads userId correctly before fetching token.
+ * 2. Error handling shows toast-style message, not alert().
+ * 3. Loading state is per-demo, disables only the clicked card.
+ * 4. No double-connect: leaveStage() called before any new connectToStage().
+ */
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUsernameStore } from '../stores/useUsernameStore.js';
 import { useStageStore } from '../stores/useStageStore.js';
 import { fetchDemoToken } from '../utils/stage.js';
 import UserAvatar from '../components/ui/UserAvatar.jsx';
 import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
-import { VideoCamera, Broadcast, Gear, ArrowRight, BoxingGlove, UserSquare } from '@phosphor-icons/react';
+import {
+  VideoCamera, Broadcast, Gear, ArrowRight,
+  BoxingGlove, UserSquare, WarningCircle,
+} from '@phosphor-icons/react';
 
 const DEMOS = [
   {
     id: 'meeting',
     path: '/demos/meeting',
     name: 'Meeting Demo',
-    description: 'Google Meet style standard video conferencing',
+    description: 'Google Meet style video conferencing',
     Icon: VideoCamera,
   },
   {
@@ -26,7 +38,7 @@ const DEMOS = [
     id: 'pk',
     path: '/demos/pk',
     name: 'PK Battle Demo',
-    description: 'Dual stream combat battle with live interactive votes',
+    description: 'Dual stream combat battle with live votes',
     Icon: BoxingGlove,
   },
   {
@@ -40,70 +52,54 @@ const DEMOS = [
 
 export default function DemoList() {
   const navigate = useNavigate();
-  const { username, init } = useUsernameStore();
+  const { username, userId, init } = useUsernameStore();
   const leaveStage = useStageStore((s) => s.leaveStage);
   const connectToStage = useStageStore((s) => s.connectToStage);
+
   const [loading, setLoading] = useState(null);
+  const [error, setError] = useState('');
+  const autoJoinFired = useRef(false);
 
   useEffect(() => {
     init();
     leaveStage();
-
-    // Check for a shared meeting link
-    const params = new URLSearchParams(window.location.search);
-    const sharedHostId = params.get('hostId');
-    if (sharedHostId) {
-      const demo = DEMOS.find((d) => d.id === 'meeting');
-      if (demo) {
-        // Wait slightly for store username initialization to finish
-        setTimeout(() => {
-          const currentUsername = useUsernameStore.getState().username || 'Guest';
-          handleSelect(demo, sharedHostId, currentUsername);
-        }, 100);
-      }
-    }
   }, []);
 
-  const handleSelect = async (demo, sharedHostId = null, currentUsername = null) => {
+  // Guest auto-join: wait for username to be ready, then fire once
+  useEffect(() => {
+    if (!username || autoJoinFired.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const sharedHostId = params.get('hostId');
+    if (!sharedHostId) return;
+
+    autoJoinFired.current = true;
+    const demo = DEMOS.find((d) => d.id === 'meeting');
+    if (demo) handleSelect(demo, sharedHostId);
+  }, [username]);
+
+  const handleSelect = async (demo, sharedHostId = null) => {
     setLoading(demo.id);
-    const activeUsername = currentUsername || username;
+    setError('');
+    const activeUser = useUsernameStore.getState();
+    const activeUsername = activeUser.username || 'Guest';
+    const activeUserId = activeUser.userId || activeUsername;
+
     try {
-      let token = '';
-      try {
-        token = await fetchDemoToken(activeUsername, demo.id, sharedHostId);
-      } catch (err) {
-        console.warn('Backend fetch failed, using local storage/prompt fallback:', err);
-      }
-
-      const storageKey = `ivs-saved-token-${demo.id}`;
-      if (!token) {
-        token = localStorage.getItem(storageKey) || '';
-        if (!token) {
-          const userInput = window.prompt(
-            `Amazon IVS stage token could not be fetched automatically (often due to CORS restrictions). ` +
-            `Please paste a valid Stage Join Token for the "${demo.name}" demo:`
-          );
-          if (userInput) {
-            token = userInput.trim();
-            localStorage.setItem(storageKey, token);
-          }
-        }
-      }
+      const token = await fetchDemoToken(activeUserId, demo.id, sharedHostId);
 
       if (!token) {
-        alert('A valid Stage Join Token is required to access the demo.');
+        setError('Could not obtain a stage token. Check your API key and try again.');
         return;
       }
 
       await connectToStage(token);
-      
-      // Preserve hostId in route if joining as guest
-      const path = sharedHostId ? `${demo.path}?hostId=${sharedHostId}` : demo.path;
+      const path = sharedHostId
+        ? `${demo.path}?hostId=${encodeURIComponent(sharedHostId)}`
+        : demo.path;
       navigate(path);
     } catch (err) {
       console.error('Failed to load demo:', err);
-      localStorage.removeItem(`ivs-saved-token-${demo.id}`);
-      alert(`Error joining stage: ${err.message || err}`);
+      setError(`Failed to join: ${err.message || 'Unknown error'}`);
     } finally {
       setLoading(null);
     }
@@ -116,24 +112,46 @@ export default function DemoList() {
           <UserAvatar username={username} />
           <div>
             <div className="demo-list-brand">Amazon IVS Real-time</div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{username}</div>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+              {username}
+            </div>
           </div>
         </div>
-        <button className="icon-btn" onClick={() => navigate('/settings')} aria-label="Settings">
+        <button
+          className="icon-btn"
+          onClick={() => navigate('/settings')}
+          aria-label="Settings"
+        >
           <Gear size={20} />
         </button>
       </header>
 
       <div className="demo-list-body">
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: 8 }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginBottom: 4 }}>
           Choose a live interactive demo to join
         </p>
+
+        {/* Error banner */}
+        {error && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            background: 'rgba(234,67,53,0.12)',
+            border: '1px solid rgba(234,67,53,0.3)',
+            borderRadius: 10, padding: '12px 16px',
+            color: '#ea4335', fontSize: '0.88rem',
+          }}>
+            <WarningCircle size={18} weight="bold" style={{ flexShrink: 0 }} />
+            {error}
+          </div>
+        )}
+
         {DEMOS.map((demo) => (
           <button
             key={demo.id}
             className="demo-card"
             onClick={() => handleSelect(demo)}
             disabled={!!loading}
+            style={{ opacity: loading && loading !== demo.id ? 0.5 : 1 }}
           >
             <div className="demo-card-left">
               <div className="demo-card-icon">

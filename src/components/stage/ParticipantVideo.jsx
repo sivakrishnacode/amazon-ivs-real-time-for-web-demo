@@ -4,14 +4,10 @@ export default function ParticipantVideo({ stream, isLocal }) {
   const videoRef = useRef(null);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (stream) {
-      video.srcObject = stream;
-    } else {
-      video.srcObject = null;
-    }
+    const el = videoRef.current;
+    if (!el) return;
+    // stream should already be a MediaStream (not a track)
+    el.srcObject = stream instanceof MediaStream ? stream : null;
   }, [stream]);
 
   return (
@@ -20,12 +16,14 @@ export default function ParticipantVideo({ stream, isLocal }) {
       autoPlay
       playsInline
       muted={isLocal}
-      className="participant-card-video"
       style={{
+        position: 'absolute',
+        inset: 0,
         width: '100%',
         height: '100%',
         objectFit: 'cover',
         transform: isLocal ? 'scaleX(-1)' : 'none',
+        borderRadius: 'inherit',
       }}
     />
   );

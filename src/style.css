@@ -428,3 +428,38 @@ body {
 .audio-participant-card.speaking {
   border-color: var(--green);
 }
+
+/* ── participant-card: must be a sizing container ────────────────────────── */
+.participant-card {
+  position: relative;
+  min-height: 120px;
+  aspect-ratio: 16/9;
+}
+
+/* ── control-bar: override absolute positioning in MeetingDemo ───────────── */
+.demo-view-page .control-bar {
+  position: relative;
+  bottom: unset;
+  left: unset;
+  transform: none;
+  margin: 8px auto 12px;
+  width: fit-content;
+}
+
+/* ── connection badge animation ─────────────────────────────────────────── */
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+/* ── loading spinner center ─────────────────────────────────────────────── */
+.loading-fullscreen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}

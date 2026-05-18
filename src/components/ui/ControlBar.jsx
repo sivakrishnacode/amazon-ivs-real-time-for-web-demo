@@ -1,17 +1,26 @@
+/**
+ * ControlBar.jsx — Google Meet style floating control bar
+ * Now shows mic/cam state correctly, with tooltips.
+ */
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Microphone, MicrophoneSlash, VideoCamera, VideoCameraSlash, PhoneDisconnect } from '@phosphor-icons/react';
+import {
+  Microphone, MicrophoneSlash,
+  VideoCamera, VideoCameraSlash,
+  PhoneDisconnect,
+  Chat,
+} from '@phosphor-icons/react';
 
 export default function ControlBar({
   isJoined,
   micEnabled,
   camEnabled,
-  showChat,
   onToggleMic,
   onToggleCam,
   onLeave,
   onJoin,
   joinLabel,
+  extraButtons,
 }) {
   const navigate = useNavigate();
 
@@ -26,9 +35,12 @@ export default function ControlBar({
         <button
           className={`control-btn${micEnabled ? ' active' : ''}`}
           onClick={onToggleMic}
-          aria-label={micEnabled ? 'Mute Microphone' : 'Unmute Microphone'}
+          title={micEnabled ? 'Mute microphone' : 'Unmute microphone'}
+          aria-label={micEnabled ? 'Mute microphone' : 'Unmute microphone'}
         >
-          {micEnabled ? <Microphone size={20} weight="bold" /> : <MicrophoneSlash size={20} weight="bold" />}
+          {micEnabled
+            ? <Microphone size={20} weight="bold" />
+            : <MicrophoneSlash size={20} weight="bold" />}
         </button>
       )}
 
@@ -36,14 +48,25 @@ export default function ControlBar({
         <button
           className={`control-btn${camEnabled ? ' active' : ''}`}
           onClick={onToggleCam}
-          aria-label={camEnabled ? 'Turn Off Camera' : 'Turn On Camera'}
+          title={camEnabled ? 'Turn off camera' : 'Turn on camera'}
+          aria-label={camEnabled ? 'Turn off camera' : 'Turn on camera'}
         >
-          {camEnabled ? <VideoCamera size={20} weight="bold" /> : <VideoCameraSlash size={20} weight="bold" />}
+          {camEnabled
+            ? <VideoCamera size={20} weight="bold" />
+            : <VideoCameraSlash size={20} weight="bold" />}
         </button>
       )}
 
+      {/* Slot for extra demo-specific buttons */}
+      {extraButtons}
+
       {isJoined ? (
-        <button className="control-btn danger" onClick={handleDisconnect} aria-label="Leave Stage">
+        <button
+          className="control-btn danger"
+          onClick={handleDisconnect}
+          title="Leave meeting"
+          aria-label="Leave meeting"
+        >
           <PhoneDisconnect size={20} weight="bold" />
         </button>
       ) : (
@@ -52,11 +75,12 @@ export default function ControlBar({
             onClick={onJoin}
             className="btn-primary"
             style={{
-              padding: '0 20px',
+              padding: '0 24px',
               height: 44,
               fontSize: '0.9rem',
               borderRadius: 22,
               boxShadow: 'none',
+              width: 'auto',
             }}
           >
             {joinLabel || 'Join Stage'}
