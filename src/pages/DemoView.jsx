@@ -9,14 +9,14 @@ import PKModeDemo from '../demos/PKModeDemo.jsx';
 export default function DemoView() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const stageJoined = useStageStore((s) => s.stageJoined);
+  const stageCreated = useStageStore((s) => s.stageCreated);
 
   useEffect(() => {
-    // If not connected to any stage, go back to demo list
-    if (!stageJoined) {
+    // If stage connection hasn't been initialized/created, go back to list
+    if (!stageCreated) {
       navigate('/demos');
     }
-  }, [stageJoined]);
+  }, [stageCreated]);
 
   const renderDemo = () => {
     switch (id) {

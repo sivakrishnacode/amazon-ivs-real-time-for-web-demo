@@ -6,6 +6,7 @@ let _strategy = null;
 
 export const useStageStore = create((set, get) => ({
   stageJoined: false,
+  stageCreated: false,
   stageState: StageConnectionState.DISCONNECTED,
   participants: [],
   localParticipant: null,
@@ -20,6 +21,7 @@ export const useStageStore = create((set, get) => ({
       await get().leaveStage();
     }
 
+    set({ stageCreated: true });
     const { micEnabled, camEnabled } = get();
     const strategy = {
       stageStreamsToPublish() {
@@ -53,6 +55,7 @@ export const useStageStore = create((set, get) => ({
       await stageInstance.join();
     } catch (err) {
       console.error('Stage Connection Failed:', err);
+      set({ stageCreated: false });
       throw err;
     }
   },
@@ -69,6 +72,7 @@ export const useStageStore = create((set, get) => ({
     }
     set({
       stageJoined: false,
+      stageCreated: false,
       stageState: StageConnectionState.DISCONNECTED,
       participants: [],
       localParticipant: null,
