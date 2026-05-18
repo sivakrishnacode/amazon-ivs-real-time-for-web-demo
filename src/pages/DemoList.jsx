@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUsernameStore } from '../stores/useUsernameStore.js';
 import { useStageStore } from '../stores/useStageStore.js';
-import { fetchDemoToken, fetchActiveStreams } from '../utils/stage.js';
+import { fetchDemoToken, fetchActiveStreams, destroyActiveStream } from '../utils/stage.js';
 import UserAvatar from '../components/ui/UserAvatar.jsx';
 import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
-import { VideoCamera, Broadcast, Gear, ArrowRight, BoxingGlove, UserSquare, ArrowsCounterClockwise } from '@phosphor-icons/react';
+import { VideoCamera, Broadcast, Gear, ArrowRight, BoxingGlove, UserSquare, ArrowsCounterClockwise, Trash } from '@phosphor-icons/react';
 
 const DEMOS = [
   {
@@ -47,6 +47,7 @@ export default function DemoList() {
   const [loading, setLoading] = useState(null);
   const [activeStreams, setActiveStreams] = useState([]);
   const [refreshingStreams, setRefreshingStreams] = useState(false);
+  const [destroyingId, setDestroyingId] = useState(null);
 
   useEffect(() => {
     init();
@@ -135,6 +136,22 @@ export default function DemoList() {
     }
   };
 
+  const handleDestroyStream = async (stream) => {
+    if (!window.confirm(`Are you sure you want to delete ${stream.hostAttributes?.username || 'this'}'s active stream?`)) return;
+    
+    setDestroyingId(stream.hostId);
+    try {
+      await destroyActiveStream(stream.hostId);
+      // Optimistic remove
+      setActiveStreams(prev => prev.filter(s => s.hostId !== stream.hostId));
+    } catch (err) {
+      console.error('Failed to destroy stream:', err);
+      alert('Failed to destroy stream. Check console for details.');
+    } finally {
+      setDestroyingId(null);
+    }
+  };
+
   const getFormatTime = (isoString) => {
     try {
       const date = new Date(isoString);
@@ -142,6 +159,15 @@ export default function DemoList() {
     } catch (e) {
       return '';
     }
+  };
+
+  const getActiveMembersCount = (stream) => {
+    if (stream.seats && Array.isArray(stream.seats)) {
+      // Audio rooms have a seats array, count occupied seats
+      return stream.seats.filter(s => s && s.trim() !== '').length;
+    }
+    // For video rooms or if seats aren't present, we might not have a direct count, default to at least 1 (the host)
+    return 1;
   };
 
   return (
@@ -249,6 +275,8 @@ export default function DemoList() {
               {activeStreams.map((stream) => {
                 const isAudio = stream.type === 'AUDIO';
                 const Icon = isAudio ? Broadcast : VideoCamera;
+                const membersCount = getActiveMembersCount(stream);
+                const isDestroying = destroyingId === stream.hostId;
                 
                 return (
                   <div 
@@ -262,6 +290,8 @@ export default function DemoList() {
                       borderRadius: 16,
                       border: '1px solid rgba(255,255,255,0.05)',
                       transition: 'all 0.2s ease',
+                      opacity: isDestroying ? 0.5 : 1,
+                      pointerEvents: isDestroying ? 'none' : 'auto',
                     }}
                     className="stream-list-card"
                   >
@@ -279,8 +309,18 @@ export default function DemoList() {
                         <Icon size={20} weight="fill" />
                       </div>
                       <div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
                           {stream.hostAttributes?.username || 'Host'}
+                          <span style={{
+                            fontSize: '0.65rem',
+                            padding: '2px 6px',
+                            background: 'rgba(255,255,255,0.1)',
+                            borderRadius: 8,
+                            fontWeight: 500,
+                            color: 'var(--text-secondary)'
+                          }}>
+                            {membersCount} {membersCount === 1 ? 'member' : 'members'}
+                          </span>
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', gap: 6, marginTop: 2 }}>
                           <span>{isAudio ? 'Audio Room' : 'Video Stage'}</span>
@@ -290,25 +330,47 @@ export default function DemoList() {
                       </div>
                     </div>
 
-                    <button 
-                      onClick={() => handleJoinActiveStream(stream)}
-                      style={{
-                        padding: '8px 18px',
-                        background: '#3080f8',
-                        border: 'none',
-                        borderRadius: 20,
-                        color: '#ffffff',
-                        fontSize: '0.8rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        boxShadow: '0 2px 8px rgba(48, 128, 248, 0.3)',
-                        transition: 'all 0.2s',
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                    >
-                      {isAudio ? 'Listen' : 'Join'}
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <button 
+                        onClick={() => handleJoinActiveStream(stream)}
+                        style={{
+                          padding: '8px 18px',
+                          background: '#3080f8',
+                          border: 'none',
+                          borderRadius: 20,
+                          color: '#ffffff',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 8px rgba(48, 128, 248, 0.3)',
+                          transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                      >
+                        {isAudio ? 'Listen' : 'Join'}
+                      </button>
+                      
+                      <button 
+                        onClick={() => handleDestroyStream(stream)}
+                        className="destroy-btn"
+                        style={{
+                          padding: 8,
+                          background: 'rgba(234, 67, 53, 0.1)',
+                          border: '1px solid rgba(234, 67, 53, 0.2)',
+                          borderRadius: '50%',
+                          color: '#ea4335',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s',
+                        }}
+                        title="Delete Stream"
+                      >
+                        <Trash size={16} weight="bold" />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -340,6 +402,13 @@ export default function DemoList() {
           transform: translateY(-2px);
           border-color: rgba(255,255,255,0.1) !important;
           box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .destroy-btn:hover {
+          background: rgba(234, 67, 53, 0.2) !important;
+          transform: scale(1.05);
+        }
+        .destroy-btn:active {
+          transform: scale(0.95);
         }
       `}</style>
     </div>

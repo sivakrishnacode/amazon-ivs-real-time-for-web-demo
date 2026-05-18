@@ -32,8 +32,7 @@ export default function MeetingDemo() {
   const [copied, setCopied] = useState(false);
   const [showChat, setShowChat] = useState(false);
 
-  // Leave stage on unmount
-  useEffect(() => () => { leaveStage(); }, []);
+  // Removed unmount leaveStage to prevent React 18 StrictMode from destroying the stage immediately
 
   const params = new URLSearchParams(window.location.search);
   const sharedHostId = params.get('hostId');

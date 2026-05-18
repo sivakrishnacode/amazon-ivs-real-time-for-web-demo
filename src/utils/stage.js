@@ -101,3 +101,30 @@ export const getRemovedStreams = (participant, updatedStreams) => {
       )
   );
 };
+
+export const destroyActiveStream = async (hostId) => {
+  const headers = {
+    'Content-Type': 'application/json; charset=utf-8',
+    'X-API-Key': DEMO_API_KEY,
+  };
+
+  const response = await fetch(`${DEMO_API_URL}/`, {
+    method: 'DELETE',
+    headers,
+    body: JSON.stringify({
+      hostId,
+      cid: 'k0ljndvw90',
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  const result = await response.text();
+  try {
+    return JSON.parse(result);
+  } catch (e) {
+    return result;
+  }
+};

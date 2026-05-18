@@ -99,7 +99,7 @@ export default function GuestSpotDemo() {
   useEffect(() => {
     return () => {
       releaseLocalVideo();
-      leaveStage();
+      // leaveStage removed for StrictMode compatibility
     };
   }, []);
 

@@ -245,7 +245,7 @@ export default function AudioOnlyDemo() {
   useEffect(() => {
     return () => {
       leaveSlot();
-      leaveStage();
+      // leaveStage removed for StrictMode compatibility
     };
   }, []);
 
