@@ -85,7 +85,8 @@ export const useStageStore = create((set, get) => ({
         return out;
       },
       shouldPublishParticipant(info) {
-        return info.isLocal;
+        if (!info.isLocal) return false;
+        return !!(_publishedVideoTrack || _publishedAudioTrack);
       },
       shouldSubscribeToParticipant(info) {
         return info.isLocal ? SubscribeType.NONE : SubscribeType.AUDIO_VIDEO;
