@@ -1,20 +1,28 @@
 import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
+import react from '@vitejs/plugin-react';
 import path from 'path';
-import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  plugins: [
-    vue(),
-    VitePWA({
-      injectRegister: 'auto',
-      registerType: 'autoUpdate',
-      manifest: false,
-    }),
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+    },
+  },
+  server: {
+    https: false,
+    proxy: {
+      '/api': {
+        target: 'https://k0ljndvw90.execute-api.us-east-1.amazonaws.com/prod/M738diLr2xJapjWfioKn',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            proxyReq.setHeader('Origin', 'https://k0ljndvw90.execute-api.us-east-1.amazonaws.com');
+            proxyReq.setHeader('Referer', 'https://k0ljndvw90.execute-api.us-east-1.amazonaws.com/');
+          });
+        }
+      },
     },
   },
 });

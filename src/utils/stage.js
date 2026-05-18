@@ -8,9 +8,19 @@ export const fetchDemoToken = async (userId = '', demo) => {
     headers,
     body,
   });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
   const result = await response.text();
-  const { token: _token } = JSON.parse(result);
-  return _token;
+  const parsed = JSON.parse(result);
+
+  if (!parsed || !parsed.token) {
+    throw new Error('Token is missing in the backend response');
+  }
+
+  return parsed.token;
 };
 
 export const isLocalParticipant = (info) => {
